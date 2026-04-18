@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog Posts{% endblock %}
+
+{% block content %}
+    {% if query %}
+        <h3 style="margin-bottom: 20px;">Search results for: "{{ query }}"</h3>
+    {% endif %}
+
+    <div class="post-grid">
+        {% for post in posts %}
+            <div class="post-card">
+                <div class="post-meta">
+                    {{ post.created_at|date:"F d, Y" }} • By {{ post.author.username }}
+                </div>
+                <h2><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h2>
+                <p class="post-content">{{ post.content|truncatewords:20 }}</p>
+                <div>
+                    <a href="{% url 'post_detail' post.slug %}" class="btn">Read More</a>
+                </div>
+            </div>
+        {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+                <h3>No posts found.</h3>
+                {% if query %}
+                    <p>Try searching for something else!</p>
+                {% else %}
+                    <p>Be the first one to <a href="{% url 'post_create' %}">write a post</a>!</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

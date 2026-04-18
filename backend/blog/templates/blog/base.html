@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Blog</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<header>
+    <h1>🌸 My Blog</h1>
+    <p style="color:#5a5a5a; margin-top:5px;">A simple blog website</p>
+</header>
+
+<div class="container">
+
+    <div class="post-card">
+        <h2 class="post-title">First Blog Post</h2>
+        <p class="post-content">
+            This is my first blog content using Django templates. 
+            Now the colors are soft and easy to read.
+        </p>
+        <a href="#" class="btn">Read More</a>
+    </div>
+
+    <div class="post-card">
+        <h2 class="post-title">Second Blog Post</h2>
+        <p class="post-content">
+            This blog UI now looks more professional with pastel shades and better contrast.
+        </p>
+        <a href="#" class="btn">Read More</a>
+    </div>
+
+</div>
+
+</body>
+</html>

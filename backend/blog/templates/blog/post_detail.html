@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <a href="{% url 'post_list' %}" style="display:inline-block; margin-bottom: 20px; font-weight:600;">⬅ Back to Home</a>
+    
+    <h1 class="post-detail-title">{{ post.title }}</h1>
+    <div class="post-meta" style="font-size: 1rem;">
+        Posted on {{ post.created_at|date:"F d, Y" }} by <strong>{{ post.author.username }}</strong>
+    </div>
+
+    <div style="margin-top: 30px; font-size: 1.1rem; line-height: 1.8;">
+        {{ post.content|linebreaks }}
+    </div>
+
+    {% if user == post.author %}
+    <div class="post-actions">
+        <a href="{% url 'post_update' post.slug %}" class="btn btn-primary">Edit Post</a>
+        <a href="{% url 'post_delete' post.slug %}" class="btn btn-danger">Delete Post</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Comments Section -->
+<div class="comments-section">
+    <h3>Comments ({{ comments.count }})</h3>
+    <hr style="border: 0; height: 1px; background: #eee; margin: 15px 0 25px 0;">
+
+    {% if user.is_authenticated %}
+        <div class="comment-form-container" style="background:#fff; padding:20px; border-radius:12px; margin-bottom: 30px;">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.text }}
+                </div>
+                <button type="submit" class="btn btn-primary">Add Comment</button>
+            </form>
+        </div>
+    {% else %}
+        <p style="margin-bottom:30px;">Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
+    {% endif %}
+
+    <div class="comments-list">
+        {% for comment in comments %}
+            <div class="comment">
+                <div class="comment-meta">{{ comment.user.username }} • {{ comment.created_at|timesince }} ago</div>
+                <div>{{ comment.text|linebreaks }}</div>
+            </div>
+        {% empty %}
+            <p>No comments yet. Be the first to share your thoughts!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
