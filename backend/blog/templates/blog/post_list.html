@@ -15,8 +15,12 @@
                 </div>
                 <h2><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h2>
                 <p class="post-content">{{ post.content|truncatewords:20 }}</p>
-                <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
                     <a href="{% url 'post_detail' post.slug %}" class="btn">Read More</a>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); display: flex; gap: 10px;">
+                        <span>👁️ {{ post.views }}</span>
+                        <span>❤️ {{ post.like_set.count }}</span>
+                    </div>
                 </div>
             </div>
         {% empty %}

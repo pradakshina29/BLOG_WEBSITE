@@ -7,8 +7,24 @@
     <a href="{% url 'post_list' %}" style="display:inline-block; margin-bottom: 20px; font-weight:600;">⬅ Back to Home</a>
     
     <h1 class="post-detail-title">{{ post.title }}</h1>
-    <div class="post-meta" style="font-size: 1rem;">
-        Posted on {{ post.created_at|date:"F d, Y" }} by <strong>{{ post.author.username }}</strong>
+    <div class="post-meta" style="font-size: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span>Posted on {{ post.created_at|date:"F d, Y" }} by <strong>{{ post.author.username }}</strong></span>
+        <span style="color: var(--text-muted);">
+            <span>👁️ {{ post.views }} Views</span>
+        </span>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-top: 20px; align-items: center;">
+        <button id="like-btn" class="btn" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 15px;">
+            <span id="like-icon" style="color: {% if user_has_liked %}red{% else %}inherit{% endif %}; font-size: 1.2rem;">
+                {% if user_has_liked %}❤️{% else %}🤍{% endif %}
+            </span>
+            <span id="like-count">{{ like_count }}</span> Likes
+        </button>
+        
+        <button id="share-btn" class="btn" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 15px;">
+            🔗 Share
+        </button>
     </div>
 
     <div style="margin-top: 30px; font-size: 1.1rem; line-height: 1.8;">
@@ -53,4 +69,48 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    document.getElementById('like-btn').addEventListener('click', function() {
+        {% if not user.is_authenticated %}
+            window.location.href = "{% url 'login' %}";
+            return;
+        {% endif %}
+        
+        fetch("{% url 'post_like' post.slug %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            document.getElementById('like-count').innerText = data.like_count;
+            if (data.is_liked) {
+                document.getElementById('like-icon').innerText = '❤️';
+                document.getElementById('like-icon').style.color = 'red';
+            } else {
+                document.getElementById('like-icon').innerText = '🤍';
+                document.getElementById('like-icon').style.color = 'inherit';
+            }
+        }).catch(err => console.error(err));
+    });
+
+    document.getElementById('share-btn').addEventListener('click', function() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ post.title|escapejs }}',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Link copied to clipboard!");
+        }
+    });
+</script>
 {% endblock %}

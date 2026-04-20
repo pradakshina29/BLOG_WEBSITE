@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .models import Post, Comment
+from django.http import JsonResponse
+from .models import Post, Comment, Like
 from .forms import PostForm, CommentForm, UserRegisterForm
 
 def post_list(request):
@@ -17,6 +18,11 @@ def post_list(request):
 
 def post_detail(request, slug):
     post = get_object_or_404(Post, slug=slug)
+    
+    # Increment view count
+    post.views += 1
+    post.save(update_fields=['views'])
+    
     comments = post.comments.all().order_by('-created_at')
     
     if request.method == 'POST':
@@ -32,7 +38,34 @@ def post_detail(request, slug):
     else:
         form = CommentForm()
         
-    return render(request, 'blog/post_detail.html', {'post': post, 'comments': comments, 'form': form})
+    user_has_liked = False
+    if request.user.is_authenticated:
+        user_has_liked = Like.objects.filter(post=post, user=request.user).exists()
+        
+    return render(request, 'blog/post_detail.html', {
+        'post': post, 
+        'comments': comments, 
+        'form': form,
+        'user_has_liked': user_has_liked,
+        'like_count': Like.objects.filter(post=post).count()
+    })
+
+@login_required
+def post_like(request, slug):
+    if request.method == 'POST':
+        post = get_object_or_404(Post, slug=slug)
+        like, created = Like.objects.get_or_create(post=post, user=request.user)
+        
+        if not created:
+            # If the like already exists, the user is unliking it
+            like.delete()
+            is_liked = False
+        else:
+            is_liked = True
+            
+        like_count = Like.objects.filter(post=post).count()
+        return JsonResponse({'is_liked': is_liked, 'like_count': like_count})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required
 def post_create(request):
@@ -78,13 +111,16 @@ def post_delete(request, slug):
         return redirect('post_list')
     return render(request, 'blog/post_confirm_delete.html', {'post': post})
 
+from django.contrib.auth import login
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Your account has been created! You are now able to log in')
-            return redirect('login')
+            user = form.save()
+            login(request, user)
+            messages.success(request, 'Your account has been created and you are now logged in!')
+            return redirect('post_list')
     else:
         form = UserRegisterForm()
     return render(request, 'registration/register.html', {'form': form})
